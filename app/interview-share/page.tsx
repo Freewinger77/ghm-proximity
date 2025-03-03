@@ -10,7 +10,7 @@ import { Phone } from "lucide-react"
 async function placeCall(phoneNumber: string, countryCode: string, overrides: any) {
   const fullNumber = `${countryCode}${phoneNumber}`
   const requestBody = {
-    assistantId: "a272b74b-3520-4124-a179-893c87dd7786",
+    assistantId: "ee2561fb-ce75-40d5-abca-13bb74356e9d",
     assistantOverrides: overrides,
     customer: {
       number: fullNumber,

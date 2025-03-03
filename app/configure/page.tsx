@@ -377,7 +377,7 @@ Here is the User Input now:`,
   const startTest = async () => {
     setCallStatus("loading")
     const overrides = updateAssistantOverrides()
-    const response = await vapi.start("a272b74b-3520-4124-a179-893c87dd7786", overrides)
+    const response = await vapi.start("ee2561fb-ce75-40d5-abca-13bb74356e9d", overrides)
   }
 
   const stopTest = () => {

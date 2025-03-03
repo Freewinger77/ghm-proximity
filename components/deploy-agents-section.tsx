@@ -319,7 +319,7 @@ Make sure the output is **only** the JavaScript object with the format:
 
       const storedOverrides = getStoredOverrides()
       const requestBody = {
-        assistantId: "a272b74b-3520-4124-a179-893c87dd7786",
+        assistantId: "ee2561fb-ce75-40d5-abca-13bb74356e9d",
         assistantOverrides: {
           ...storedOverrides,
           variableValues: {
