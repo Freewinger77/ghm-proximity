@@ -107,9 +107,9 @@ export default function CampaignReportPage() {
               call_id, 
               transcript, 
               questions,
-              (SELECT COUNT(*) FROM campaigns WHERE campaign_name = '${campaignName}') as total_calls,
-              (SELECT COUNT(*) FROM campaigns WHERE campaign_name = '${campaignName}' AND call_ended = '✓') as successful_calls
-            FROM campaigns 
+              (SELECT COUNT(*) FROM james WHERE campaign_name = '${campaignName}') as total_calls,
+              (SELECT COUNT(*) FROM james WHERE campaign_name = '${campaignName}' AND call_ended = '✓') as successful_calls
+            FROM james 
             WHERE campaign_name = '${campaignName}'
           `,
           database: "campaigns",

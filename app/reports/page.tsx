@@ -63,7 +63,7 @@ export default function ReportsPage() {
             "Bearer sqlitecloud://coarqpbcnz.g2.sqlite.cloud:8860?apikey=p4bMGfH2iYwuSPq7aPJNyrLjxCQnh1YpU3PmRUtulGw",
         },
         body: JSON.stringify({
-          sql: "SELECT * FROM campaigns ORDER BY call_date DESC",
+          sql: "SELECT * FROM james ORDER BY call_date DESC",
           database: "campaigns",
         }),
       })
@@ -124,7 +124,7 @@ export default function ReportsPage() {
             "Bearer sqlitecloud://coarqpbcnz.g2.sqlite.cloud:8860?apikey=p4bMGfH2iYwuSPq7aPJNyrLjxCQnh1YpU3PmRUtulGw",
         },
         body: JSON.stringify({
-          sql: "SELECT call_id FROM campaigns WHERE call_ended IS NULL",
+          sql: "SELECT call_id FROM james WHERE call_ended IS NULL",
           database: "campaigns",
         }),
       })
@@ -197,7 +197,7 @@ export default function ReportsPage() {
                 "Bearer sqlitecloud://coarqpbcnz.g2.sqlite.cloud:8860?apikey=p4bMGfH2iYwuSPq7aPJNyrLjxCQnh1YpU3PmRUtulGw",
             },
             body: JSON.stringify({
-              sql: `UPDATE campaigns SET call_ended = '${callStatus}', transcript = '${JSON.stringify(logsData.transcript.replace(/[\n"'`]/g, ""))}' WHERE call_id = '${callId}'`,
+              sql: `UPDATE james SET call_ended = '${callStatus}', transcript = '${JSON.stringify(logsData.transcript.replace(/[\n"'`]/g, ""))}' WHERE call_id = '${callId}'`,
               database: "campaigns",
             }),
           })
@@ -245,7 +245,7 @@ export default function ReportsPage() {
             "Bearer sqlitecloud://coarqpbcnz.g2.sqlite.cloud:8860?apikey=p4bMGfH2iYwuSPq7aPJNyrLjxCQnh1YpU3PmRUtulGw",
         },
         body: JSON.stringify({
-          sql: `DELETE FROM campaigns WHERE campaign_name = '${campaignName}'`,
+          sql: `DELETE FROM james WHERE campaign_name = '${campaignName}'`,
           database: "campaigns",
         }),
       })

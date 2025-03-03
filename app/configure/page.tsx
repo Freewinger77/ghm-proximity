@@ -357,7 +357,7 @@ Here is the User Input now:`,
             "Bearer sqlitecloud://coarqpbcnz.g2.sqlite.cloud:8860?apikey=p4bMGfH2iYwuSPq7aPJNyrLjxCQnh1YpU3PmRUtulGw",
         },
         body: JSON.stringify({
-          sql: `UPDATE campaigns SET questions = ? WHERE campaign_name = ?`,
+          sql: `UPDATE james SET questions = ? WHERE campaign_name = ?`,
           params: [JSON.stringify(questions), campaignName],
           database: "campaigns",
         }),
