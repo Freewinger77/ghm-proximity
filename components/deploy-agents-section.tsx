@@ -182,7 +182,7 @@ export function DeployAgentsSection({ generatedQuestions, onShareSurvey }: Deplo
         },
         body: JSON.stringify({
           sql: `
-          INSERT INTO campaigns (campaign_name, number, call_id,report, questions)
+          INSERT INTO james (campaign_name, number, call_id,report, questions)
           VALUES ('${campaignName}', '${number}', '${finalCallId}','pending',  '${questionsOnly}')
         `,
           database: "campaigns",
@@ -432,7 +432,7 @@ Make sure the output is **only** the JavaScript object with the format:
         },
         body: JSON.stringify({
           sql: `
-INSERT INTO campaigns (campaign_name, number, call_id, report, questions)
+INSERT INTO james (campaign_name, number, call_id, report, questions)
 VALUES ('${campaignName}', 'survey-campaign', 'survey-link-${Date.now()}', '${JSON.stringify({
             overrides: currentOverrides,
             headingText,

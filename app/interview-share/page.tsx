@@ -144,7 +144,7 @@ export default function InterviewSharePage() {
               "Bearer sqlitecloud://coarqpbcnz.g2.sqlite.cloud:8860?apikey=p4bMGfH2iYwuSPq7aPJNyrLjxCQnh1YpU3PmRUtulGw",
           },
           body: JSON.stringify({
-            sql: `SELECT * FROM campaigns WHERE campaign_name = '${campaign}' LIMIT 1`,
+            sql: `SELECT * FROM james WHERE campaign_name = '${campaign}' LIMIT 1`,
             database: "campaigns",
           }),
         })
@@ -197,7 +197,7 @@ export default function InterviewSharePage() {
               "Bearer sqlitecloud://coarqpbcnz.g2.sqlite.cloud:8860?apikey=p4bMGfH2iYwuSPq7aPJNyrLjxCQnh1YpU3PmRUtulGw",
           },
           body: JSON.stringify({
-            sql: `SELECT report FROM campaigns WHERE campaign_name = '${campaign}' LIMIT 1`,
+            sql: `SELECT report FROM james WHERE campaign_name = '${campaign}' LIMIT 1`,
             database: "campaigns",
           }),
         })
@@ -275,7 +275,7 @@ export default function InterviewSharePage() {
         },
         body: JSON.stringify({
           sql: `
-UPDATE campaigns 
+UPDATE james 
 SET report = 'completed' 
 WHERE campaign_name = '${campaignName}' AND number = '${email}' AND call_id = '${callId}'
 `,
@@ -361,7 +361,7 @@ WHERE campaign_name = '${campaignName}' AND number = '${email}' AND call_id = '$
         },
         body: JSON.stringify({
           sql: `
-INSERT INTO campaigns (campaign_name, number, call_id, report, questions)
+INSERT INTO james (campaign_name, number, call_id, report, questions)
 VALUES ('${campaignName}', '${email}', '${newCallId}', 'in-progress', '${campaignData?.questions || ""}')
 `,
           database: "campaigns",
