@@ -16,8 +16,7 @@ import {
   DialogFooter,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Upload, Play } from "lucide-react"
-import Link from "next/link"
+import { Upload, Play, RefreshCw } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useRouter } from "next/navigation"
 import { Progress } from "@/components/ui/progress"
@@ -39,7 +38,10 @@ export function DeployAgentsSection({ generatedQuestions, onShareSurvey }: Deplo
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [totalNumbers, setTotalNumbers] = useState(0)
   const [estimatedBudget, setEstimatedBudget] = useState({ min: 0, max: 0 })
+  // Add headingText state and imageBase64 state
   const [surveyText, setSurveyText] = useState("")
+  const [headingText, setHeadingText] = useState("Participate in our survey")
+  const [imageBase64, setImageBase64] = useState<string | null>(null)
   const [parsedNumbers, setParsedNumbers] = useState<string[]>([])
   const [callStatuses, setCallStatuses] = useState<CallStatus[]>([])
   const [isLaunching, setIsLaunching] = useState(false)
@@ -58,6 +60,7 @@ export function DeployAgentsSection({ generatedQuestions, onShareSurvey }: Deplo
   const [objective, setObjective] = useState("")
   const [persona, setPersona] = useState("")
   const [promptAdditions, setPromptAdditions] = useState("")
+  const [surveyLink, setSurveyLink] = useState<string>("")
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -97,6 +100,19 @@ export function DeployAgentsSection({ generatedQuestions, onShareSurvey }: Deplo
 
   const handleUploadClick = () => {
     fileInputRef.current?.click()
+  }
+
+  // Add image upload handler function after handleUploadClick
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        const base64 = e.target?.result as string
+        setImageBase64(base64)
+      }
+      reader.readAsDataURL(file)
+    }
   }
 
   useEffect(() => {
@@ -166,7 +182,7 @@ export function DeployAgentsSection({ generatedQuestions, onShareSurvey }: Deplo
         },
         body: JSON.stringify({
           sql: `
-          INSERT INTO james (campaign_name, number, call_id,report, questions)
+          INSERT INTO campaigns (campaign_name, number, call_id,report, questions)
           VALUES ('${campaignName}', '${number}', '${finalCallId}','pending',  '${questionsOnly}')
         `,
           database: "campaigns",
@@ -319,7 +335,7 @@ Make sure the output is **only** the JavaScript object with the format:
 
       const storedOverrides = getStoredOverrides()
       const requestBody = {
-        assistantId: "ee2561fb-ce75-40d5-abca-13bb74356e9d",
+        assistantId: "a272b74b-3520-4124-a179-893c87dd7786",
         assistantOverrides: {
           ...storedOverrides,
           variableValues: {
@@ -387,6 +403,88 @@ Make sure the output is **only** the JavaScript object with the format:
     }
   }, [])
 
+  const updateAssistantOverrides = () => {
+    const storedOverrides = localStorage.getItem("assistantOverrides")
+    return storedOverrides ? JSON.parse(storedOverrides) : {}
+  }
+
+  const createSurveyCampaign = async () => {
+    if (!campaignName.trim()) {
+      alert("Please enter a campaign name")
+      return
+    }
+
+    try {
+      setIsLoading(true)
+
+      // Get the current assistant overrides - force an update first
+      const currentOverrides = updateAssistantOverrides()
+      console.log("Capturing current overrides for survey link:", currentOverrides)
+
+      // Create a campaign entry in the database
+      const response = await fetch("https://coarqpbcnz.g2.sqlite.cloud/v2/weblite/sql", {
+        method: "POST",
+        headers: {
+          accept: "application/json",
+          "Content-Type": "application/json",
+          Authorization:
+            "Bearer sqlitecloud://coarqpbcnz.g2.sqlite.cloud:8860?apikey=p4bMGfH2iYwuSPq7aPJNyrLjxCQnh1YpU3PmRUtulGw",
+        },
+        body: JSON.stringify({
+          sql: `
+INSERT INTO campaigns (campaign_name, number, call_id, report, questions)
+VALUES ('${campaignName}', 'survey-campaign', 'survey-link-${Date.now()}', '${JSON.stringify({
+            overrides: currentOverrides,
+            headingText,
+            surveyText,
+            imageBase64,
+          }).replace(/'/g, "''")}', '${generatedQuestions.replace(/'/g, "''")}')`,
+          database: "campaigns",
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error("Full error response:", errorData)
+        throw new Error(`Failed to create campaign: ${response.status}`)
+      }
+
+      // Generate a survey link with the campaign name AND the overrides directly in the URL
+      const encodedCampaignName = encodeURIComponent(campaignName)
+      const encodedOverrides = encodeURIComponent(JSON.stringify(currentOverrides))
+      const encodedHeading = encodeURIComponent(headingText)
+      const encodedSurveyText = encodeURIComponent(surveyText)
+
+      // Create the URL with all parameters
+      let link = `${window.location.origin}/interview-share?campaign=${encodedCampaignName}&overrides=${encodedOverrides}&heading=${encodedHeading}&text=${encodedSurveyText}`
+
+      // If there's an image, we'll still need to get it from the database as it's too large for a URL
+      if (imageBase64) {
+        link += "&hasImage=true"
+      }
+
+      setSurveyLink(link)
+
+      console.log(`Successfully created survey campaign: ${campaignName}`)
+      console.log(`Survey link with embedded overrides: ${link}`)
+    } catch (error) {
+      console.error("Error creating survey campaign:", error)
+      alert("Failed to create survey campaign. Please try again.")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Function to ensure overrides are updated before creating the survey link
+  const handleCreateSurvey = () => {
+    // Force an update of the assistant overrides
+    const updatedOverrides = updateAssistantOverrides()
+    console.log("Updated overrides before creating survey:", updatedOverrides)
+
+    // Create the survey campaign
+    createSurveyCampaign()
+  }
+
   return (
     <div className="space-y-6">
       <h3 className="text-lg font-medium">Deploy Agents</h3>
@@ -395,9 +493,28 @@ Make sure the output is **only** the JavaScript object with the format:
           <TabsTrigger value="survey">Generate Survey Page</TabsTrigger>
           <TabsTrigger value="coldcall">Cold Call</TabsTrigger>
         </TabsList>
+        {/* Update the TabsContent for survey to include heading input and image upload */}
         <TabsContent value="survey" className="space-y-4">
           <div className="space-y-2">
-            <p htmlFor="survey-text">Change text on survey page</p>
+            <p htmlFor="campaign-name">Campaign Name</p>
+            <Input
+              id="campaign-name"
+              placeholder="Enter a name for this survey campaign"
+              value={campaignName}
+              onChange={(e) => setCampaignName(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <p htmlFor="heading-text">Survey page heading</p>
+            <Input
+              id="heading-text"
+              placeholder="Enter heading for the survey page"
+              value={headingText}
+              onChange={(e) => setHeadingText(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <p htmlFor="survey-text">Survey page description</p>
             <Textarea
               id="survey-text"
               placeholder="Enter text for the survey page"
@@ -406,18 +523,55 @@ Make sure the output is **only** the JavaScript object with the format:
               onChange={(e) => setSurveyText(e.target.value)}
             />
           </div>
-          <Link
-            href={`/interview-share?text=${encodeURIComponent(surveyText)}`}
-            passHref
-            onClick={() => {
-              if (onShareSurvey) {
-                onShareSurvey()
-                console.log("Share survey link clicked, onShareSurvey called") // Add this line
-              }
-            }}
-          >
-            <Button className="w-full">Share Link</Button>
-          </Link>
+          <div className="space-y-2">
+            <p>Upload image (optional)</p>
+            <div className="flex items-center gap-2">
+              <Input type="file" accept="image/*" onChange={handleImageUpload} className="flex-1" />
+              {imageBase64 && (
+                <Button variant="outline" size="sm" onClick={() => setImageBase64(null)} className="whitespace-nowrap">
+                  Clear Image
+                </Button>
+              )}
+            </div>
+            {imageBase64 && (
+              <div className="mt-2">
+                <img
+                  src={imageBase64 || "/placeholder.svg"}
+                  alt="Preview"
+                  className="max-h-40 rounded-md object-contain"
+                />
+              </div>
+            )}
+          </div>
+          {/* Show either Create or Update button based on whether a link exists */}
+          {surveyLink ? (
+            <Button variant="outline" className="w-full" onClick={handleCreateSurvey}>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Update Survey Link with Current Settings
+            </Button>
+          ) : (
+            <Button className="w-full" onClick={handleCreateSurvey} disabled={!campaignName.trim()}>
+              Create Survey Campaign
+            </Button>
+          )}
+          {surveyLink && (
+            <div className="mt-4 p-4 border rounded-md bg-muted">
+              <p className="font-medium mb-2">Survey Link Created:</p>
+              <div className="flex items-center gap-2">
+                <Input value={surveyLink} readOnly />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    navigator.clipboard.writeText(surveyLink)
+                    alert("Link copied to clipboard!")
+                  }}
+                >
+                  Copy
+                </Button>
+              </div>
+            </div>
+          )}
         </TabsContent>
         <TabsContent value="coldcall" className="space-y-4">
           <p className="text-sm text-muted-foreground">

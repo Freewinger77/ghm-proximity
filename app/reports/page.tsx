@@ -63,7 +63,7 @@ export default function ReportsPage() {
             "Bearer sqlitecloud://coarqpbcnz.g2.sqlite.cloud:8860?apikey=p4bMGfH2iYwuSPq7aPJNyrLjxCQnh1YpU3PmRUtulGw",
         },
         body: JSON.stringify({
-          sql: "SELECT * FROM james ORDER BY call_date DESC",
+          sql: "SELECT * FROM campaigns ORDER BY call_date DESC",
           database: "campaigns",
         }),
       })
@@ -124,7 +124,7 @@ export default function ReportsPage() {
             "Bearer sqlitecloud://coarqpbcnz.g2.sqlite.cloud:8860?apikey=p4bMGfH2iYwuSPq7aPJNyrLjxCQnh1YpU3PmRUtulGw",
         },
         body: JSON.stringify({
-          sql: "SELECT call_id FROM james WHERE call_ended IS NULL",
+          sql: "SELECT call_id FROM campaigns WHERE call_ended IS NULL",
           database: "campaigns",
         }),
       })
@@ -197,7 +197,7 @@ export default function ReportsPage() {
                 "Bearer sqlitecloud://coarqpbcnz.g2.sqlite.cloud:8860?apikey=p4bMGfH2iYwuSPq7aPJNyrLjxCQnh1YpU3PmRUtulGw",
             },
             body: JSON.stringify({
-              sql: `UPDATE james SET call_ended = '${callStatus}', transcript = '${JSON.stringify(logsData.transcript.replace(/[\n"'`]/g, ""))}' WHERE call_id = '${callId}'`,
+              sql: `UPDATE campaigns SET call_ended = '${callStatus}', transcript = '${JSON.stringify(logsData.transcript.replace(/[\n"'`]/g, ""))}' WHERE call_id = '${callId}'`,
               database: "campaigns",
             }),
           })
@@ -245,7 +245,7 @@ export default function ReportsPage() {
             "Bearer sqlitecloud://coarqpbcnz.g2.sqlite.cloud:8860?apikey=p4bMGfH2iYwuSPq7aPJNyrLjxCQnh1YpU3PmRUtulGw",
         },
         body: JSON.stringify({
-          sql: `DELETE FROM james WHERE campaign_name = '${campaignName}'`,
+          sql: `DELETE FROM campaigns WHERE campaign_name = '${campaignName}'`,
           database: "campaigns",
         }),
       })
@@ -353,7 +353,9 @@ export default function ReportsPage() {
                       <TableCell onClick={() => openCampaignDetails(campaign)}>
                         {format(parseISO(campaign.latest_call_date), "PPpp")}
                       </TableCell>
-                      <TableCell onClick={() => openCampaignDetails(campaign)}>{campaign.calls.length}</TableCell>
+                      <TableCell onClick={() => openCampaignDetails(campaign)}>
+                        {campaign.calls.filter((call) => call.number !== "survey-campaign").length}
+                      </TableCell>
                       <TableCell>
                         <div className="flex space-x-2">
                           <Button
@@ -390,7 +392,10 @@ export default function ReportsPage() {
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>{selectedCampaign?.campaign_name} - Campaign Details</DialogTitle>
+              <DialogTitle>
+                {selectedCampaign?.campaign_name} - Campaign Details (
+                {selectedCampaign?.calls.filter((call) => call.number !== "survey-campaign").length} calls)
+              </DialogTitle>
             </DialogHeader>
             <div className="overflow-x-auto">
               <Table>
@@ -405,18 +410,20 @@ export default function ReportsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {selectedCampaign?.calls.map((call) => (
-                    <TableRow key={call.id}>
-                      <TableCell>{call.number}</TableCell>
-                      <TableCell>{call.call_id}</TableCell>
-                      <TableCell>{call.report}</TableCell>
-                      <TableCell>{format(parseISO(call.call_date), "PPpp")}</TableCell>
-                      <TableCell>{call.short_text}</TableCell>
-                      <TableCell>
-                        {call.call_ended === "✓" ? "✓" : call.call_ended === "-" ? "-" : call.call_ended || "No"}
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {selectedCampaign?.calls
+                    .filter((call) => call.number !== "survey-campaign")
+                    .map((call) => (
+                      <TableRow key={call.id}>
+                        <TableCell>{call.number}</TableCell>
+                        <TableCell>{call.call_id}</TableCell>
+                        <TableCell>{call.report}</TableCell>
+                        <TableCell>{format(parseISO(call.call_date), "PPpp")}</TableCell>
+                        <TableCell>{call.short_text}</TableCell>
+                        <TableCell>
+                          {call.call_ended === "✓" ? "✓" : call.call_ended === "-" ? "-" : call.call_ended || "No"}
+                        </TableCell>
+                      </TableRow>
+                    ))}
                 </TableBody>
               </Table>
             </div>

@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import Vapi from "@vapi-ai/web"
+import { useRouter } from "next/navigation"
 
 const vapi = new Vapi("b06587ff-5e67-4f06-88b9-d85c4e6ec24b") // Get Public Token from Dashboard > Accounts Page
 
@@ -21,6 +22,7 @@ export default function ConfigurePage() {
   const [callStatus, setCallStatus] = useState("inactive")
   const [error, setError] = useState<string | null>(null)
   const [campaignName, setCampaignName] = useState("")
+  const router = useRouter()
 
   // State for FlowDesignerSection
   const [persona, setPersona] = useState("platform-user")
@@ -41,6 +43,7 @@ export default function ConfigurePage() {
   const [profileName, setProfileName] = useState("")
   const [savedProfiles, setSavedProfiles] = useState<string[]>([])
   const [selectedProfile, setSelectedProfile] = useState("")
+  const [surveyText, setSurveyText] = useState("")
 
   useEffect(() => {
     const profiles = localStorage.getItem("savedProfiles")
@@ -331,7 +334,7 @@ Here is the User Input now:`,
       },
     }
     localStorage.setItem("assistantOverrides", JSON.stringify(overrides))
-    console.log("Updated assistant overrides:", overrides) // Add this line
+    console.log("Updated assistant overrides with latest state:", overrides)
     return overrides
   }, [
     companyName,
@@ -342,6 +345,13 @@ Here is the User Input now:`,
     contactInfo,
     promptAdditions,
   ])
+
+  // Function to force update overrides before navigating
+  const forceUpdateOverridesAndNavigate = (url: string) => {
+    const updatedOverrides = updateAssistantOverrides()
+    console.log("Force updated overrides before navigation:", updatedOverrides)
+    router.push(url)
+  }
 
   const saveQuestionsToDatabase = async (
     campaignName: string,
@@ -357,7 +367,7 @@ Here is the User Input now:`,
             "Bearer sqlitecloud://coarqpbcnz.g2.sqlite.cloud:8860?apikey=p4bMGfH2iYwuSPq7aPJNyrLjxCQnh1YpU3PmRUtulGw",
         },
         body: JSON.stringify({
-          sql: `UPDATE james SET questions = ? WHERE campaign_name = ?`,
+          sql: `UPDATE campaigns SET questions = ? WHERE campaign_name = ?`,
           params: [JSON.stringify(questions), campaignName],
           database: "campaigns",
         }),
@@ -377,7 +387,7 @@ Here is the User Input now:`,
   const startTest = async () => {
     setCallStatus("loading")
     const overrides = updateAssistantOverrides()
-    const response = await vapi.start("ee2561fb-ce75-40d5-abca-13bb74356e9d", overrides)
+    const response = await vapi.start("a272b74b-3520-4124-a179-893c87dd7786", overrides)
   }
 
   const stopTest = () => {
@@ -420,6 +430,8 @@ Here is the User Input now:`,
     const updatedOverrides = updateAssistantOverrides()
     console.log("Overrides updated before sharing survey:", updatedOverrides) // Add this line
   }
+
+  // Add a function to generate a direct survey link with current overrides
 
   return (
     <AppLayout>
@@ -596,7 +608,11 @@ Here is the User Input now:`,
         {/* Deploy Agents Section */}
         <Card className="p-4 sm:p-6 mt-6">
           <h2 className="text-xl font-semibold mb-4">Deploy Agents</h2>
-          <DeployAgentsSection generatedQuestions={formatQuestionsForDeployment()} onShareSurvey={handleShareSurvey} />
+          <DeployAgentsSection
+            generatedQuestions={formatQuestionsForDeployment()}
+            onShareSurvey={handleShareSurvey}
+            forceUpdateOverridesAndNavigate={forceUpdateOverridesAndNavigate}
+          />
         </Card>
       </div>
     </AppLayout>
